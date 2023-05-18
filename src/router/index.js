@@ -10,6 +10,16 @@ const routes = [
     name: 'home',
     component: HomeView
   },
+  {
+    path: '/contracts',
+    name: 'contracts',
+    component: () => import('../views/UserContracts')
+  },
+  {
+    path: '/sign',
+    name: 'sign',
+    component: () => import('../views/Sign')
+  },
 ]
 
 const router = new VueRouter({

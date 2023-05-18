@@ -1,5 +1,6 @@
 const CompressionPlugin = require("compression-webpack-plugin");
 const TerserPlugin = require('terser-webpack-plugin')
+const webpack = require('webpack');
 
 module.exports = {
   lintOnSave: false,
@@ -8,9 +9,31 @@ module.exports = {
     'vuetify'
   ],
   configureWebpack: config => {
-    if (process.env.NODE_ENV !== 'production') return
+    // if (process.env.NODE_ENV !== 'production') return
     return {
+      resolve: {
+        fallback: {
+          "fs": false,
+          "tls": false,
+          "net": false,
+          "path": false,
+          "zlib": false,
+          "http": false,
+          "https": false,
+          "stream": require.resolve("stream-browserify"),
+          "buffer": require.resolve("buffer"),
+          "crypto": require.resolve("crypto-browserify"),
+          "url": require.resolve("url/"),
+          "crypto-browserify": require.resolve('crypto-browserify'), //if you want to use this module also don't forget npm i crypto-browserify 
+        } 
+      },
       plugins: [
+        new webpack.ProvidePlugin({
+          Buffer: ['buffer', 'Buffer'],
+        }),
+        new webpack.ProvidePlugin({
+          process: 'process/browser',
+        }),
         new CompressionPlugin({
           filename: "[path][base].gz",
           algorithm: "gzip",
