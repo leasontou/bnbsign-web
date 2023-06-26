@@ -22,14 +22,21 @@
               :class="hover?'rotate':''"/>
           </v-hover>
           <v-spacer></v-spacer>
-          <div @click="switchNetwork" 
+          <div @click="addNetwork" 
             class="d-flex flex-row align-center pa-4 rounded-lg" 
             style="cursor:pointer;background: #F7F8FA;">
             <img style="width:28px;" src="../assets/img/common/bnb.svg" />
-            <span class="font-weight-bold text-subtitle-1 ml-3">{{networkName}}</span>
+            <span class="font-weight-bold text-subtitle-1 ml-3">Add to Metamask</span>
+            <v-spacer></v-spacer>
+          </div>
+          <div @click="switchNetwork" 
+            class="d-flex flex-row align-center pa-4 rounded-lg mt-2" 
+            style="cursor:pointer;background: #F7F8FA;">
+            <img style="width:28px;" src="../assets/img/common/bnb.svg" />
+            <span class="font-weight-bold text-subtitle-1 ml-3">Switch to {{networkName}}</span>
             <v-spacer></v-spacer>
             <v-progress-circular
-              v-if="isLoading && connectType=='metamask'"
+              v-if="isLoading"
               :size="20"
               :width="2"
               indeterminate
@@ -89,6 +96,18 @@ export default {
       this.$emit('input',opened);
     },
     switchNetwork(){
+      this.$chain.switchChain(
+        ethers.utils.hexValue(
+          config.chain.chainId
+        ),
+      ).then(() => {
+        window.location.reload();
+      }).catch(error => {
+        this.$ui.showToast({msg: 'Switch network error',color:'#ff0000'})
+      }).finally(()=>{
+      })
+    },
+    addNetwork(){
       if (!utils.isMetamaskInstalled()) {
         this.$ui.showToast({msg: 'MetaMask not installed',color:'#ff0000'})
         return

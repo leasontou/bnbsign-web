@@ -12,6 +12,12 @@ const chain = {
   getNetwork() {
     return this.provider().getNetwork()
   },
+  switchChain(chainId){
+    return window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [chainId],
+    });
+  },
   addChain(chainConfig) {
     return window.ethereum.request({
       method: "wallet_addEthereumChain",
