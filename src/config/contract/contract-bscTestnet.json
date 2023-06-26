@@ -1,0 +1,14 @@
+{
+	"chainId": 97,
+	"network": "BNBChain Testnet",
+	"rpc": "https://data-seed-prebsc-1-s2.binance.org:8545",
+  "blockExplorerUrls": "https://testnet.bscscan.com",
+  "nativeCurrency": {
+    "name": "tBNB",
+    "decimals": 18,
+    "symbol": "tBNB"
+  },
+  "apiEndpoint":"http://localhost:9999",
+	"store": "0xF78ef9f720F135947B709853e205cAeA7489A1ab",
+	"sign": "0xb2C8436F98052ce662eC7EBFC3DaEe62a222F322"
+}

@@ -1,43 +1,61 @@
 <template>
   <v-container>
-    <v-tabs>
-      <v-tab>My Create</v-tab>
-      <v-tab>My Sign</v-tab>
-      <v-tab-item>
-        <v-list>
-          <v-list-item
-            v-for="(item,n) in createContracts"
-            :to="{name:'sign',query:{id:item.id}}"
-            :key="n"
-          >
-            <v-list-item-title class="d-flex flex-row align-center">
-              {{ item.name }}
-            </v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-tab-item>
-      <v-tab-item>
-        <v-list>
-          <v-list-item
-            v-for="(item,n) in signContracts"
-            :to="{name:'sign',query:{id:item.id}}"
-            :key="n"
-          >
-            <v-list-item-title class="d-flex flex-row align-center">
-              {{ item.name }}
-            </v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-tab-item>
-    </v-tabs>
+    <v-card flat>
+      <v-card-title class="primary-text">Contracts</v-card-title>
+      <v-card-text>
+        <v-simple-table>
+          <template v-slot:default>
+            <thead>
+              <tr>
+                <th class="text-left">
+                  Name
+                </th>
+                <th class="text-left">
+                  Status
+                </th>
+                <th class="text-left">
+                  Storage
+                </th>
+                <th class="text-left">
+                  Modified
+                </th>
+                <th class="text-center">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(item,n) in contracts"
+                :key="n"
+              >
+                <td>{{ item.name }}</td>
+                <td>
+                  <span v-if="item.signCompleted">Done</span>
+                  <span v-else>{{ item.isSigner?'Pending Signature':'Pending' }}</span>
+                </td>
+                <td>IPFS</td>
+                <td>{{ item.updateAt*1000 | datetime}}</td>
+                <td class="text-center">
+                  <v-btn depressed color="primary" small 
+                    @click="gotoSign(item)"
+                    class="text-none gradient-bg">
+                    Sign
+                  </v-btn>
+                </td>
+              </tr>
+            </tbody>
+          </template>
+        </v-simple-table>
+      </v-card-text>
+    </v-card>
   </v-container>
 </template>
 
 <script>
 export default {
   data:() => ({
-    createContracts: [],
-    signContracts: []
+    contracts:[]
   }),
   mounted(){
     this.$bus.$on("walletConnect", (account) => {
@@ -46,14 +64,46 @@ export default {
     this.queryData()
   },
   methods:{
+    gotoSign(item){
+      this.$router.push({name:'sign',query:{id:item.id}})
+    },
     queryData(){
       if(!this.$store.getters.isLogin){
         return
       }
 
-      this.$api.userContracts(this.$store.state.account).then(resp => {
-        this.createContracts = resp.data.create
-        this.signContracts = resp.data.sign
+      const account = this.$store.state.account
+      this.$chain.sign().getAccountContracts(account).then(contracts => {
+        this.contracts = contracts.map(item => {
+          let accountSigned = {}
+          for (let i = 0; i < item.signed.length; i++) {
+            accountSigned[item.signed[i].toLowerCase()] = true
+          }
+
+          let isSigner = false
+          for (let i = 0; i < item.signers.length; i++) {
+            if(item.signers[i].toLowerCase() == account.toLowerCase())
+            isSigner = true
+            break
+          }
+          let signed = accountSigned[account.toLowerCase()]?accountSigned[account.toLowerCase()]:false
+          
+          let signCompleted = true
+          for (let i = 0; i < item.signers.length; i++) {
+            if(!accountSigned[item.signers[i].toLowerCase()]){
+              signCompleted = false
+              break
+            }
+          }
+
+          return {
+            ...item,
+            isSigner: isSigner,
+            signed: signed,
+            signCompleted: signCompleted,
+            updateAt: item.updateAt.toNumber()
+          }
+        })
       })
     }
   }

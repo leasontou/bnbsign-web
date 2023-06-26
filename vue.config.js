@@ -4,7 +4,6 @@ const webpack = require('webpack');
 
 module.exports = {
   lintOnSave: false,
-  
   transpileDependencies: [
     'vuetify'
   ],

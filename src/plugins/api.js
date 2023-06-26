@@ -1,11 +1,15 @@
 import request from "../utils/request"
+import config from '../config'
 
 const apiAxios = request.createInst({
-  timeout: 1000*15,
-  baseURL: "http://localhost:9999"
+  timeout: 1000*40,
+  baseURL: config.api.endpoint
 })
 
 const api = {
+  createStore(params){
+    return apiAxios.post('/store/create',params, 'multipart/form-data')
+  },
   createContract(params){
     return apiAxios.post('/user/createContract',params)
   },

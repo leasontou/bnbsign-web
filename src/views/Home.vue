@@ -1,100 +1,108 @@
 <template>
   <v-container>
     <v-card depressed elevation="0">
-      <v-card-title>Contract Name</v-card-title>
-      <v-card-text>
-        <v-text-field dense outlined v-model="contractName" label="Contract Name"
-          hide-details></v-text-field>
-      </v-card-text>
-      <v-card-title>Upload Contract</v-card-title>
-      <v-card-text>
-        <div v-if="selectedFiles.length==0" class="pa-4 rounded d-flex flex-column align-center justify-center" style="background: #F3F5FA;border: 1px dashed #000000;height: 200px;">
-          <v-btn depressed color="primary" class="text-none" @click="selectFile">Browse Files</v-btn>
-          <input 
-            ref="uploader" 
-            class="d-none" 
-            type="file" 
-            accept=".pdf"
-            @change="onFileChanged"
+      <v-stepper non-linear v-model="step" flat class="px-0">
+        <v-stepper-header class="elevation-0">
+          <v-stepper-step
+            :complete="step > 1"
+            step="1"
+            color="#45BBFF"
           >
-        </div>
-        <div v-else>
-          <div class="d-flex flex-row">
-            <v-text-field dense outlined v-model="signer" label="Add Signer"
-              hide-details></v-text-field>
-            <v-btn depressed class="text-none ml-1" @click="addSigner" color="primary">Add</v-btn>
-          </div>
-          
-        </div>
-        
-        <v-list dense v-if="selectedFiles.length>0">
-          <v-subheader class="text-h6 px-0">Signers:</v-subheader>
-          <v-list-item
-            v-for="(address,n) in signers"
-            :key="n"
-          >
-            <v-list-item-title class="d-flex flex-row align-center">
-              <span>{{ address }}</span>
-              <v-btn icon class="ml-2" @click="deleteSigner(n)">
-                <v-icon>mdi-trash-can</v-icon>
-              </v-btn>
-            </v-list-item-title>
-            <v-spacer></v-spacer>
-          </v-list-item>
-        </v-list>
+            <span :class="step > 0?'primary-text':''">Upload Document</span>
+          </v-stepper-step>
 
-        <!-- <v-row class="mt-3" v-if="selectedFiles.length>0 && signers.length>0">
-          <v-col cols="3">
-            <v-btn depressed block class="text-none" :to="{name:'sign'}">Sign File</v-btn>
-          </v-col>
-        </v-row> -->
-      </v-card-text>
-      
-      <v-card-title>Uploaded Contracts</v-card-title>
-      <v-card-text>
-        <v-row>
-          <v-col cols="6" v-for="(f,n) in selectedFiles" :key="n">
-            <div class="d-flex flex-row align-center ba pa-4 rounded">
-              <img src="../assets/img/common/pdf.png" width="60" class="mr-4">
-              <div>
-                <span class="text-h6 d-block">{{ f.name }}</span>
-                <span>{{ calcFileSize(f.size) }}</span>
-              </div>
-              <v-spacer></v-spacer>
-              <v-btn icon @click="onFileDelete(n)">
-                <v-icon>mdi-trash-can</v-icon>
-              </v-btn>
-            </div>
-          </v-col>
-        </v-row>
-        
-        <!-- <vue-pdf-embed v-if="selectedFiles.length>0" 
-          :source="pdfURI">
-        </vue-pdf-embed> -->
-      </v-card-text>
-      
-      <v-card-text>
-        <v-btn @click="next" :disabled="!contractName || selectedFiles.length==0 || signers.length==0" depressed color="primary" class="text-none">Next</v-btn>
-      </v-card-text>
+          <v-divider></v-divider>
+
+          <v-stepper-step
+            :complete="step > 2"
+            step="2"
+            color="#45BBFF"
+          >
+            <span :class="step > 1?'primary-text':''">Manage Recipients</span>
+          </v-stepper-step>
+
+          <v-divider></v-divider>
+
+          <v-stepper-step step="3"
+            :complete="step > 3"
+            color="#45BBFF">
+            <span :class="step > 2?'primary-text':''">Prepare Documents</span>
+          </v-stepper-step>
+
+          <v-divider></v-divider>
+
+          <v-stepper-step step="4"
+            :complete="step > 4"
+            color="#45BBFF">
+            <span :class="step > 3?'primary-text':''">Review and Send</span>
+          </v-stepper-step>
+
+        </v-stepper-header>
+
+        <v-stepper-items>
+          <v-stepper-content step="1">
+            <UploadDocs @onNext="onNext" @onFileChange="onFileChange" @onStorageChanged="onStorageChanged"></UploadDocs>
+          </v-stepper-content>
+          <v-stepper-content step="2">
+            <ManageRecipients @onNext="onNext" @onBack="onBack" @receipientChanged="onReceipientChanged"></ManageRecipients>
+          </v-stepper-content>
+          <v-stepper-content step="3">
+            <PrepareDocs v-if="step==3" :file="docFile" :fields="signFields" :recipients="recipients" @onSignFieldsChanged="onSignFieldsChanged" @onNext="onNext" @onBack="onBack"></PrepareDocs>
+          </v-stepper-content>
+          <v-stepper-content step="4">
+            <ReceiveSend :file="docFile" :recipients="recipients" 
+              @onContractNameChanged="onContractNameChanged"
+              @onPasswordChanged="onPasswordChanged"
+              @onBack="onBack" @onSend="onSend"></ReceiveSend>
+          </v-stepper-content>
+        </v-stepper-items>
+      </v-stepper>
     </v-card>
     <v-snackbar
       v-model="showSnack"
-      color="primary"
       app
+      right
       bottom
       timeout="-1"
+      color="#F3F5FA"
+      light
       transition="slide-y-reverse-transition"
-      max-width="350">
-      <span class="font-weight-bold">{{ snackMsg }}</span>
-      <template v-slot:action="{ attrs }">
-        <v-progress-circular
-          :size="20"
-          :width="2"
-          indeterminate
-          v-bind="attrs"
-          color="#fff"
-        ></v-progress-circular>
-      </template>
+      content-class="pa-0"
+      max-width="400">
+      <div class="text-subtitle-1 px-4 py-3">
+        <div class="font-weight-bold d-flex flex-row align-center">
+          <span>Uploading Contract</span>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="showSnackDetail=!showSnackDetail" class="mr-n2">
+            <v-icon color="#2B6EF1">mdi-chevron-down</v-icon>
+          </v-btn>
+        </div>
+        <div v-if="showSnackDetail">
+          <div class="d-flex flex-row align-center pt-3">
+            <span>Uploading to IPFS</span>
+            <v-spacer></v-spacer>
+            <v-progress-circular
+              v-if="isUploadingFile"
+              size="20"
+              width="2"
+              indeterminate
+            ></v-progress-circular>
+            <v-checkbox v-else v-model="uploadComplete" readonly hide-details class="mt-0 pt-0" style="width:24px;height:24px;"></v-checkbox>
+          </div>
+          <div class="d-flex flex-row align-center pt-3">
+            <span>Waiting for block confirmations</span>
+            <v-spacer></v-spacer>
+            <v-progress-circular
+              v-if="isWaitingConfirm"
+              size="20"
+              width="2"
+              indeterminate
+            ></v-progress-circular>
+            <v-checkbox v-else v-model="blockConfirmed" readonly hide-details class="mt-0 pt-0" style="width:24px;height:24px;"></v-checkbox>
+          </div>
+        </div>
+        
+      </div>
     </v-snackbar>
   </v-container>
 </template>
@@ -104,37 +112,137 @@
 import gnfd from "@/utils/gnfd"
 import utils from "@/utils/utils"
 import { ethers } from "ethers"
+import UploadDocs from '@/components/UploadDocs.vue';
+import ManageRecipients from '@/components/ManageRecipients.vue';
+import PrepareDocs from '@/components/PrepareDocs.vue';
+import ReceiveSend from '@/components/ReceiveSend.vue';
 
 export default {
-  name: 'Home',
+  components:{
+    UploadDocs,
+    ManageRecipients,
+    PrepareDocs,
+    ReceiveSend
+  },
   data:()=>({
-    contractName: '',
-    signer: '',
+    step: 1,
+    storage: { name: 'IPFS',value:'ipfs' },
     showSnack: false,
+    showSnackDetail: true,
+    uploadComplete: false,
+    blockConfirmed: false,
+    isUploadingFile: false,
+    isWaitingConfirm: false,
     snackMsg: '',
-    signers: ["0xc4D1Ae24FbDBA2eF9969b0a1e452AaDBbBDe8DB8"],
     account: '',
-    isSelecting: false,
-    selectedFiles: [],
-    loadingTask: null,
-    numPages: null,
+    prepareDocs:false,
+    docFile: null,
+    recipients: [],
+    signFields: [],
+    contractName: '',
+    password: ''
   }),
   mounted(){
     // this.queryGNFD()
   },
   methods:{
-    addSigner(){
-      if(!ethers.utils.isAddress(this.signer)){
-        return
+    onFileChange(file){
+      this.docFile = file
+    },
+    onStorageChanged(storage){
+      this.storage = storage
+    },
+    onBack(){
+      if (this.step>1) {
+        this.step -= 1
       }
-      const signers = [...new Set([...this.signers,this.signer])]
-      this.signers = signers
-      this.signer = ''
     },
-    deleteSigner(n){
-      this.signers.splice(n,1)
+    onNext(){
+      if (this.step <= 3) {
+        this.step += 1
+      }
     },
-    async next(){
+    onContractNameChanged(name){
+      this.contractName = name
+    },
+    onPasswordChanged(password){
+      this.password = password
+    },
+    onSend(){
+      const contractName = this.contractName?this.contractName:this.docFile.name
+      this.uploadComplete = false
+      this.blockConfirmed = false
+      this.showSnack = true
+      this.showSnackDetail = true
+      this.isUploadingFile = true
+      
+      this.$api.createStore({
+        file: this.docFile,
+        type: this.storage.value,
+        owner: this.$store.state.account
+      }).then(async resp => {
+        
+
+        const txhash = resp.data.txhash
+        const receipt = await this.$chain.provider().waitForTransaction(txhash)
+        const topic = this.$chain.store().filters.CreateStore().topics[0]
+        const logs = receipt.logs.filter(log => {
+                      return log.topics[0] == topic
+                    }).map(log => {
+                      return this.$chain.store().interface.parseLog(log)
+                    });
+        const storeId = logs[0].args.id
+        const fields = this.signFields.map(f => {
+          return {
+            page: f.page,
+            account: f.address,
+            field: f.field,
+            x: f.x,
+            y: f.y,
+            signature: ''
+          }
+        })
+
+        const signers = this.recipients.filter(r => r.type=='signer').map(r => r.address)
+        const viewers = this.recipients.filter(r => r.type=='viewer').map(r => r.address)
+        
+        this.isUploadingFile = false
+        this.uploadComplete = true
+        this.isWaitingConfirm = true
+        await this.$chain.sign().connect(this.$chain.provider().getSigner()).mint(
+          this.$store.state.account,
+          contractName,
+          signers,
+          viewers,
+          storeId,
+          fields
+        ).then(tx => tx.wait())
+        this.blockConfirmed = true
+        this.isWaitingConfirm = false
+        this.$router.push({name: 'contracts'})
+      }).catch(e => {
+        console.log(e)
+      }).finally(() => {
+        this.isUploadingFile = false
+        this.isWaitingConfirm = false
+      })
+    },
+    onSignFieldsChanged(signFields){
+      this.signFields = signFields
+    },
+    onReceipientChanged(e){
+      this.recipients = [
+        ...e.signers.map(signer => ({
+          address: signer,
+          type: 'signer'
+        })),
+        ...e.viewers.map(viewer => ({
+          address: viewer,
+          type: 'viewer'
+        }))
+      ]
+    },
+    async doGNFD(){
       this.showSnack = true
       this.snackMsg = 'Get Bucket Info'
       const account = this.$store.state.account
@@ -315,52 +423,6 @@ export default {
       const bucket = await gnfd.bucket.headBucket("fucker")
       console.log(bucket)
     },
-    calcFileSize(filesize){
-      var size = "";
-      if(filesize < 0.1 * 1024){                         //小于0.1KB，则转化成B
-          size = filesize.toFixed(2) + "B"
-      }else if(filesize < 0.1 * 1024 * 1024){            //小于0.1MB，则转化成KB
-          size = (filesize/1024).toFixed(2) + "KB"
-      }else if(filesize < 0.1 * 1024 * 1024 * 1024){     //小于0.1GB，则转化成MB
-          size = (filesize/(1024 * 1024)).toFixed(2) + "MB"
-      }else{                                            //其他转化成GB
-          size = (filesize/(1024 * 1024 * 1024)).toFixed(2) + "GB"
-      }
-      var sizeStr = size + "";                        //转成字符串
-      var index = sizeStr.indexOf(".");                    //获取小数点处的索引
-      var dou = sizeStr.substr(index + 1 ,2)            //获取小数点后两位的值
-      if(dou == "00"){                                //判断后两位是否为00，如果是则删除00
-          return sizeStr.substring(0, index) + sizeStr.substr(index + 3, 2)
-      }
-      return size;
-    },
-    createURI(file){
-      var uri = window.URL.createObjectURL(file)
-      return uri
-    },
-    // loadPage(src){
-    //   var loadingTask = pdf.createLoadingTask('https://cdn.mozilla.net/pdfjs/tracemonkey.pdf');
-    // },
-    selectFile(){
-      this.isSelecting = true;
-      window.addEventListener('focus', () => {
-        this.isSelecting = false
-      }, { once: true });
-      
-      this.$refs.uploader.click();
-    },
-    onFileChanged(e) {
-      const files = e.target.files
-      this.selectedFiles.push(...files)
-      // var loadingTask = pdf.createLoadingTask(this.createURI(this.selectedFiles[0]));
-      // loadingTask.promise.then(pdf => {
-      //   this.numPages = pdf.numPages;
-      // });
-      // this.loadingTask = loadingTask
-    },
-    onFileDelete(i){
-      this.selectedFiles.splice(i,1)
-    }
   }
 }
 </script>
