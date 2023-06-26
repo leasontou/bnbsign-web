@@ -197,8 +197,8 @@ export default {
             page: f.page,
             account: f.address,
             field: f.field,
-            x: f.x,
-            y: f.y,
+            x: Math.round(f.wRatio),
+            y: Math.round(f.hRatio),
             signature: ''
           }
         })

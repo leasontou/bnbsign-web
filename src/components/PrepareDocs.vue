@@ -1,7 +1,8 @@
 <template>
-  <div class="d-flex flex-row justify-center" style="position: relative;">
+  <div class="d-flex flex-row justify-center pa-2" style="position: relative;">
     <div style="flex:1;max-width: 900px;" class="py-2">
       <div v-for="i in numPages" :key="i" class="doc-page mb-2" style="position: relative;"
+        :ref="'page'+i"
         @click="addSignField($event,i)">
         <pdf
           :src="src"
@@ -49,37 +50,20 @@
           <span class="text-h6">Place Fields</span>
         </v-sheet>
         <v-list style="flex: 1;">
-          <v-list-group>
+          <v-list-group v-for="(f,n) in placeFields" :key="n">
             <template v-slot:activator>
               <v-list-item-content>
-                <v-list-item-title>Signature Fields</v-list-item-title>
+                <v-list-item-title>{{f.title}}</v-list-item-title>
               </v-list-item-content>
             </template>
             <v-list-item v-for="(signer,n) in recipients" v-if="signer.type=='signer'" :key="n" class="pointer" 
-              @click="prepareAdd('signature',signer.address)">
+              @click="prepareAdd(f.value,signer.address)">
               <v-list-item-icon class="mr-2">
-                <inline-svg :src="require('../assets/img/common/signature.svg')" width="24" height="24"></inline-svg>
+                <inline-svg :src="f.icon" width="24" height="24"></inline-svg>
               </v-list-item-icon>
               <v-list-item-title class="black--text font-weight-bold">
                 <div>{{signer.address | hash}}'s</div>
-                <div>Signature</div>
-              </v-list-item-title>
-            </v-list-item>
-          </v-list-group>
-          <v-list-group>
-            <template v-slot:activator>
-              <v-list-item-content>
-                <v-list-item-title>Wallet Address</v-list-item-title>
-              </v-list-item-content>
-            </template>
-            <v-list-item v-for="(signer,n) in recipients" v-if="signer.type=='signer'" :key="n" class="pointer" 
-              @click="prepareAdd('wallet',signer.address)">
-              <v-list-item-icon class="mr-2">
-                <v-icon size="24" color="#2B6EF1">mdi-wallet</v-icon>
-              </v-list-item-icon>
-              <v-list-item-title class="black--text font-weight-bold">
-                <div>{{signer.address | hash}}'s</div>
-                <div>Wallet Address</div>
+                <div>{{f.name}}</div>
               </v-list-item-title>
             </v-list-item>
           </v-list-group>
@@ -106,6 +90,20 @@ export default {
     numPages: 0,
     prepareAddSignature: false,
     mousePosition: '',
+    placeFields:[
+      {
+        title: 'Signature Fields',
+        value: 'signature',
+        name: 'Signature',
+        icon: require('../assets/img/common/signature.svg')
+      },
+      // {
+      //   title: 'Wallet Address',
+      //   value: 'wallet',
+      //   name: 'Wallet Address',
+      //   icon: require('../assets/img/common/signature.svg')
+      // }
+    ],
     signFields: [],
     signField: {},
     activated: -1,
@@ -190,12 +188,17 @@ export default {
       if(this.prepareAddSignature){
         this.prepareAddSignature = false
         this.mousePosition = ''
+        let ref = eval('this.$refs.page'+page)[0]
+        let wRatio = e.offsetX*1000000/ref.offsetWidth
+        let hRatio = e.offsetY*1000000/ref.offsetHeight
         this.signFields.push({
           page: page,
           field: this.signField.type,
           address: this.signField.address,
           x: e.offsetX,
-          y: e.offsetY
+          y: e.offsetY,
+          wRatio: wRatio,
+          hRatio: hRatio
         })
 
         this.signField = {}
@@ -204,8 +207,17 @@ export default {
       }
     },
     onDragstop(e,n){
+      const page = this.signFields[n].page
+      let ref = eval('this.$refs.page'+page)[0]
+      let wRatio = e.left*1000000/ref.offsetWidth
+      let hRatio = e.top*1000000/ref.offsetHeight
+
       this.signFields[n].x = e.left
       this.signFields[n].y = e.top
+      this.signFields[n].wRatio = wRatio
+      this.signFields[n].hRatio = hRatio
+
+      console.log(this.signFields[n])
 
       this.emitFieldsChange()
     },

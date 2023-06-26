@@ -3,7 +3,7 @@
     <v-card flat>
       <v-card-title class="primary-text">Contracts</v-card-title>
       <v-card-text>
-        <v-simple-table>
+        <v-simple-table class="ba">
           <template v-slot:default>
             <thead>
               <tr>
@@ -19,7 +19,7 @@
                 <th class="text-left">
                   Modified
                 </th>
-                <th class="text-center">
+                <th class="text-right">
                   Action
                 </th>
               </tr>
@@ -36,7 +36,7 @@
                 </td>
                 <td>IPFS</td>
                 <td>{{ item.updateAt*1000 | datetime}}</td>
-                <td class="text-center">
+                <td class="text-right">
                   <v-btn depressed color="primary" small 
                     @click="gotoSign(item)"
                     class="text-none gradient-bg">
@@ -47,6 +47,13 @@
             </tbody>
           </template>
         </v-simple-table>
+        <!-- <v-divider></v-divider> -->
+        <v-pagination
+          class="mt-4"
+          color="#2B6EF1"
+          v-model="page"
+          :length="pageCount"
+        ></v-pagination>
       </v-card-text>
     </v-card>
   </v-container>
@@ -55,13 +62,22 @@
 <script>
 export default {
   data:() => ({
-    contracts:[]
+    contracts:[],
+    allContracts: [],
+    page: 1,
+    pageCount: 1,
+    pageSize: 10,
   }),
   mounted(){
     this.$bus.$on("walletConnect", (account) => {
       this.queryData()
     });
     this.queryData()
+  },
+  watch:{
+    page(){
+      this.contracts = this.allContracts.slice((this.page-1)*this.pageSize,this.page*this.pageSize)
+    }
   },
   methods:{
     gotoSign(item){
@@ -74,7 +90,7 @@ export default {
 
       const account = this.$store.state.account
       this.$chain.sign().getAccountContracts(account).then(contracts => {
-        this.contracts = contracts.map(item => {
+        this.allContracts = contracts.map(item => {
           let accountSigned = {}
           for (let i = 0; i < item.signed.length; i++) {
             accountSigned[item.signed[i].toLowerCase()] = true
@@ -103,7 +119,11 @@ export default {
             signCompleted: signCompleted,
             updateAt: item.updateAt.toNumber()
           }
-        })
+        }).reverse()
+
+        this.pageCount = Math.ceil(this.allContracts.length/this.pageSize)
+
+        this.contracts = this.allContracts.slice(0,this.pageSize)
       })
     }
   }

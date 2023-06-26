@@ -1,16 +1,18 @@
 <template>
   <div class="d-flex flex-row justify-center" style="position: relative;">
     <div style="flex:1;max-width: 900px;" class="py-2">
-      <!-- <div class="text-h4  py-6 text-center">{{ contractName }}</div> -->
-      <div v-for="i in numPages" :key="i" class="doc-page mb-2" style="position: relative;">
+      <div v-for="i in numPages" :key="i" class="doc-page mb-2" 
+        :ref="'page'+i"
+        style="position: relative;">
         <pdf
           :src="src"
           :page="i"
+          @page-loaded="onDocLoaded(i,$event)"
           style="display: inline-block; width: 100%">
         </pdf>
-        <template v-for="(f,n) in signFields">
+        <template v-for="(f,n) in signFields" v-if="f.page==i">
           <div
-            v-if="f.page==i"
+            v-if="pageLoadingCompleted"
             :style="`left:${f.x}px;top:${f.y}px;`"
             style="position: absolute;"
             @click="showSignDialog(n)"
@@ -36,10 +38,20 @@
                 <div>{{ f.account | hash }}</div>
               </div>
             </template>
-            
           </div>
         </template>
       </div>
+    </div>
+
+    <div v-if="!pageLoadingCompleted" 
+      style="left:0;top:0;position: fixed;width: 100vw;height: 100vh;background: #fff;"
+      class="d-flex flex-row align-center justify-center">
+      <v-progress-circular
+        :size="100"
+        :width="2"
+        indeterminate
+        color="#895ff1"
+      ></v-progress-circular>
     </div>
 
     <div style="position: fixed; bottom: 0;" class="py-10" v-if="!isSigned">
@@ -135,11 +147,11 @@
 <script>
 import pdf from 'vue-pdf'
 import CanvasBroad from '@/components/CanvasBroad'
-
+// import VuePdfEmbed from 'vue-pdf-embed/dist/vue2-pdf-embed'
 
 export default {
   components:{
-    CanvasBroad
+    CanvasBroad,
   },
   data:()=>({
     signDialog: false,
@@ -159,13 +171,29 @@ export default {
     storeObject: '',
     toggleSignType: 'type',
     signatureTypeContent: '',
-    waitingSign: false
+    waitingSign: false,
+    pageLoadingCompleted: false
   }),
   mounted(){
     const id = this.$route.query.id
     this.loadDocs()
   },
   methods:{
+    onDocLoaded(page,e){
+      this.pageLoadingCompleted = true
+      let fields = this.signFields
+      for (let i = 0; i < fields.length; i++) {
+        let field = fields[i]
+        if(field.page == page){
+          let ref = eval('this.$refs.page'+field.page)[0]
+          let x = field.x*ref.offsetWidth/1000000
+          let y = field.y*ref.offsetHeight/1000000
+          field.x = x
+          field.y = y
+        }
+      }
+      this.signFields = fields
+    },
     cleanBoard(){
       this.$refs.signboard.clear()
     },
@@ -189,7 +217,7 @@ export default {
         await tx.wait()
         this.isSigned = true
       }).catch(e => {
-        console.log(e)
+        this.$ui.showToast({msg: 'Sign error',color:'#ff0000'})
       }).finally(() => {
         this.waitingSign = false
       })
@@ -227,6 +255,7 @@ export default {
       this.$chain.sign().getTokens([this.$route.query.id]).then(metas => {
         const meta = metas[0]
         this.contractName = meta.name
+
         this.signFields = meta.fields.map(f => {
           return {
             ...f,
@@ -251,7 +280,6 @@ export default {
           if(this.storeType == 0){
             url = `https://ipfs.io/ipfs/${this.storeUri}`
           }
-          console.log(url)
           if(url){
             var loadingTask = pdf.createLoadingTask(url);
             this.src = loadingTask
