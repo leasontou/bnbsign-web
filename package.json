@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "deploy": "vue-cli-service build && cd sh && ./deploy.sh"
   },
   "dependencies": {
     "@bnb-chain/greenfield-chain-sdk": "0.1.0-alpha.3",
