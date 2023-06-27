@@ -1,4 +1,5 @@
 const { ethers } = require("ethers");
+import config from '../config'
 
 const chain = {
   provider(){
@@ -10,6 +11,12 @@ const chain = {
   },
   getNetwork() {
     return this.provider().getNetwork()
+  },
+  switchChain(chainId){
+    return window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [chainId],
+    });
   },
   addChain(chainConfig) {
     return window.ethereum.request({
@@ -35,6 +42,20 @@ const chain = {
   requestAccount(){
     return this.provider().send("eth_requestAccounts", []);
   },
+  store(){
+    return new ethers.Contract(
+      config.chain.store.address, 
+      config.chain.store.abi, 
+      this.provider()
+    );
+  },
+  sign(){
+    return new ethers.Contract(
+      config.chain.sign.address, 
+      config.chain.sign.abi, 
+      this.provider()
+    );
+  }
 }
 
 export default {
