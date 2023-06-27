@@ -222,6 +222,7 @@ export default {
         this.$router.push({name: 'contracts'})
       }).catch(e => {
         console.log(e)
+        this.$ui.showToast({msg: 'Upload error',color:'#ff0000'})
       }).finally(() => {
         this.isUploadingFile = false
         this.isWaitingConfirm = false
