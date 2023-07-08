@@ -1,9 +1,9 @@
 <template>
-  <div class="d-flex flex-row justify-center pa-2" style="position: relative;">
+  <div class="d-flex flex-row justify-center pa-2" style="position: relative;" @mousemove="onMousemove">
     <div style="flex:1;max-width: 900px;" class="py-2">
       <div v-for="i in numPages" :key="i" class="doc-page mb-2" style="position: relative;"
         :ref="'page'+i"
-        @click="addSignField($event,i)">
+        @click.prevent="addSignField($event,i)">
         <pdf
           :src="src"
           :page="i"
@@ -38,9 +38,15 @@
       </div>
     </div>
     
-    <div v-if="prepareAddSignature && mousePosition" class="sign-container pa-3 rounded text-center" style="position: fixed;z-index:10;" :style="mousePosition">
-      <v-icon color="#2B6EF1">mdi-wallet</v-icon>
-      <div>{{ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' | hash }}</div>
+    <div v-if="prepareAddSignature && mousePosition" class="sign-container pa-3 rounded text-center" style="position: fixed;z-index:10;pointer-events: none;" :style="mousePosition">
+      <div v-if="signField.type=='signature'">
+        <inline-svg :src="require('../assets/img/common/signature.svg')" width="24" height="24"></inline-svg>
+        <div>{{ signField.address | hash }} Signature</div>
+      </div>
+      <div v-else-if="signField.type=='wallet'">
+        <v-icon color="#2B6EF1">mdi-wallet</v-icon>
+        <div>{{ signField.address | hash }}</div>
+      </div>
     </div>
 
     
@@ -50,7 +56,7 @@
           <span class="text-h6">Place Fields</span>
         </v-sheet>
         <v-list style="flex: 1;">
-          <v-list-group v-for="(f,n) in placeFields" :key="n">
+          <v-list-group v-for="(f,n) in placeFields" :key="n" :value="true">
             <template v-slot:activator>
               <v-list-item-content>
                 <v-list-item-title>{{f.title}}</v-list-item-title>
@@ -65,6 +71,9 @@
                 <div>{{signer.address | hash}}'s</div>
                 <div>{{f.name}}</div>
               </v-list-item-title>
+              <v-list-item-icon>
+                <v-icon>mdi-plus</v-icon>
+              </v-list-item-icon>
             </v-list-item>
           </v-list-group>
         </v-list>
@@ -153,8 +162,6 @@ export default {
         this.mousePosition = `left:${e.clientX}px;top:${e.clientY}px;`
       }
     },
-    onPrepareSign(){
-    },
     loadDocs(){
       if (this.file) {
         var loadingTask = pdf.createLoadingTask(this.createURI(this.file));
@@ -216,8 +223,6 @@ export default {
       this.signFields[n].y = e.top
       this.signFields[n].wRatio = wRatio
       this.signFields[n].hRatio = hRatio
-
-      console.log(this.signFields[n])
 
       this.emitFieldsChange()
     },

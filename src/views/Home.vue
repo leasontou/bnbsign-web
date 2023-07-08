@@ -181,8 +181,6 @@ export default {
         type: this.storage.value,
         owner: this.$store.state.account
       }).then(async resp => {
-        
-
         const txhash = resp.data.txhash
         const receipt = await this.$chain.provider().waitForTransaction(txhash)
         const topic = this.$chain.store().filters.CreateStore().topics[0]
