@@ -6,9 +6,9 @@
           <v-stepper-step
             :complete="step > 1"
             step="1"
-            color="#45BBFF"
+            color="#2b6ef1"
           >
-            <span :class="step > 0?'primary-text':''">Upload Document</span>
+            <span :class="step > 0?'step-text':''">Upload Document</span>
           </v-stepper-step>
 
           <v-divider></v-divider>
@@ -16,25 +16,25 @@
           <v-stepper-step
             :complete="step > 2"
             step="2"
-            color="#45BBFF"
+            color="#2b6ef1"
           >
-            <span :class="step > 1?'primary-text':''">Manage Recipients</span>
+            <span :class="step > 1?'step-text':''">Manage Recipients</span>
           </v-stepper-step>
 
           <v-divider></v-divider>
 
           <v-stepper-step step="3"
             :complete="step > 3"
-            color="#45BBFF">
-            <span :class="step > 2?'primary-text':''">Prepare Documents</span>
+            color="#2b6ef1">
+            <span :class="step > 2?'step-text':''">Prepare Documents</span>
           </v-stepper-step>
 
           <v-divider></v-divider>
 
           <v-stepper-step step="4"
             :complete="step > 4"
-            color="#45BBFF">
-            <span :class="step > 3?'primary-text':''">Review and Send</span>
+            color="#2b6ef1">
+            <span :class="step > 3?'step-text':''">Review and Send</span>
           </v-stepper-step>
 
         </v-stepper-header>
@@ -425,3 +425,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.step-text{
+  color: #383d48;
+}
+</style>

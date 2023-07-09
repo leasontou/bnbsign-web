@@ -18,8 +18,8 @@
             @click="showSignDialog(n)"
             class="rounded sign-container pa-3 text-center pointer">
             <template v-if="!f.signature">
-              <div v-if="f.field=='signature'">
-                <inline-svg :src="require('../assets/img/common/signature.svg')" width="24" height="24"></inline-svg>
+              <div v-if="f.field=='signature'" class="d-flex flex-column align-center">
+                <v-img :src="require('../assets/img/create/icon_signature.png')" width="24" height="24"></v-img>
                 <div>{{ f.account | hash }} Signature</div>
               </div>
               <div v-else-if="f.field=='wallet'">
@@ -120,7 +120,7 @@
               >
             </div>
           </div>
-          <v-btn depressed block dark class="text-none mt-3 gradient-bg" @click="insertSignature">Insert</v-btn>
+          <v-btn depressed block dark :disabled="!insertEnabled" class="text-none mt-3 gradient-bg" @click="insertSignature">Insert</v-btn>
         </div>
         <div v-else-if="pendingSignField.field=='wallet'">
           <v-icon color="#2B6EF1">mdi-wallet</v-icon>
@@ -174,6 +174,15 @@ export default {
     waitingSign: false,
     pageLoadingCompleted: false
   }),
+  computed:{
+    insertEnabled(){
+      if(this.toggleSignType == 'type'){
+        return this.signatureTypeContent
+      }
+
+      return false
+    }
+  },
   mounted(){
     const id = this.$route.query.id
     this.loadDocs()

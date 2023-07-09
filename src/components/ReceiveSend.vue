@@ -3,7 +3,7 @@
     <div class="primary-text text-h6">Review and Send</div>
 
     <div class="mt-6">
-      <div class="primary-text font-weight-bold">Added Recipients</div>
+      <div class="subtitle-text">Added Recipients</div>
       <div class="mt-3">
         <v-row>
           <v-col cols="4" v-for="(item,n) in recipients" :key="n">
@@ -25,7 +25,7 @@
 
     <v-divider class="my-6"></v-divider>
     <div>
-      <div class="primary-text font-weight-bold">Settings</div>
+      <div class="subtitle-text">Settings</div>
       <v-row class="mt-3" dense>
         <v-col cols="6" class="d-flex flex-row align-center">
           <div class="mr-2">Contract Name:</div>
@@ -101,3 +101,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.subtitle-text{
+  color: #666e7f;
+}
+</style>

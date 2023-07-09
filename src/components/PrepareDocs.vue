@@ -26,7 +26,7 @@
             style="cursor: move;"
             class="rounded sign-container pa-3 text-center">
             <div v-if="f.field=='signature'">
-              <inline-svg :src="require('../assets/img/common/signature.svg')" width="24" height="24"></inline-svg>
+              <v-img :src="require('../assets/img/create/icon_signature.png')" width="24" height="24"></v-img>
               <div>{{ f.address | hash }} Signature</div>
             </div>
             <div v-else-if="f.field=='wallet'">
@@ -40,7 +40,7 @@
     
     <div v-if="prepareAddSignature && mousePosition" class="sign-container pa-3 rounded text-center" style="position: fixed;z-index:10;pointer-events: none;" :style="mousePosition">
       <div v-if="signField.type=='signature'">
-        <inline-svg :src="require('../assets/img/common/signature.svg')" width="24" height="24"></inline-svg>
+        <v-img :src="require('../assets/img/create/icon_signature.png')" width="24" height="24"></v-img>
         <div>{{ signField.address | hash }} Signature</div>
       </div>
       <div v-else-if="signField.type=='wallet'">
@@ -65,7 +65,7 @@
             <v-list-item v-for="(signer,n) in recipients" v-if="signer.type=='signer'" :key="n" class="pointer" 
               @click="prepareAdd(f.value,signer.address)">
               <v-list-item-icon class="mr-2">
-                <inline-svg :src="f.icon" width="24" height="24"></inline-svg>
+                <v-img width="24" height="24" :src="f.icon"></v-img>
               </v-list-item-icon>
               <v-list-item-title class="black--text font-weight-bold">
                 <div>{{signer.address | hash}}'s</div>
@@ -104,7 +104,7 @@ export default {
         title: 'Signature Fields',
         value: 'signature',
         name: 'Signature',
-        icon: require('../assets/img/common/signature.svg')
+        icon: require('../assets/img/create/icon_signature.png')
       },
       // {
       //   title: 'Wallet Address',
